@@ -126,8 +126,13 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 		try {
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
 			beanFactory.setSerializationId(getId());
+
+			//TODO 自定义配置BF
 			customizeBeanFactory(beanFactory);
+
+			// 加载BD-source
 			loadBeanDefinitions(beanFactory);
+
 			this.beanFactory = beanFactory;
 		}
 		catch (IOException ex) {

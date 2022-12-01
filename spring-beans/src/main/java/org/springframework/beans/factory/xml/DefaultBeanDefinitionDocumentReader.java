@@ -126,8 +126,10 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		// then ultimately reset this.delegate back to its original (parent) reference.
 		// this behavior emulates a stack of delegates without actually necessitating one.
 		BeanDefinitionParserDelegate parent = this.delegate;
+		// 获取root下面的beans元素注解
 		this.delegate = createDelegate(getReaderContext(), root, parent);
 
+		// 判断当前节点的命名空间是否为默认命名空间(http://www.springframework.org/schema/beans)
 		if (this.delegate.isDefaultNamespace(root)) {
 			String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);
 			if (StringUtils.hasText(profileSpec)) {
@@ -145,8 +147,11 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			}
 		}
 
+		// 在加载xml之前做的事情，扩展
 		preProcessXml(root);
+		// 加载bd
 		parseBeanDefinitions(root, this.delegate);
+		// 在加载xml之后做的事情，扩展
 		postProcessXml(root);
 
 		this.delegate = parent;
@@ -166,25 +171,31 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * @param root the DOM root element of the document
 	 */
 	protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
+		// 如果是默认的命名空间
 		if (delegate.isDefaultNamespace(root)) {
 			NodeList nl = root.getChildNodes();
 			for (int i = 0; i < nl.getLength(); i++) {
 				Node node = nl.item(i);
 				if (node instanceof Element ele) {
+					// 根据是否默认的命名空间进行不同的加载
+					// 这里的默认命名空间的意思是指引入的xml文件中的标签(如beans bean alias import等)
+					// 是否由http://www.springframework.org/schema/beans而来
+					// 如果是从这里面来，就是默认命名空间
 					if (delegate.isDefaultNamespace(ele)) {
 						parseDefaultElement(ele, delegate);
-					}
-					else {
+					} else {
 						delegate.parseCustomElement(ele);
 					}
 				}
 			}
-		}
-		else {
+		} else {
 			delegate.parseCustomElement(root);
 		}
 	}
 
+	/**
+	 * 加载默认的元素
+	 */
 	private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
 		if (delegate.nodeNameEquals(ele, IMPORT_ELEMENT)) {
 			importBeanDefinitionResource(ele);
